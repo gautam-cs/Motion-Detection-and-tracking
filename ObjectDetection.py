@@ -1,46 +1,39 @@
 import os
 import numpy as np
 import cv2
-cwd=os.getcwd()
 
-cap = cv2.VideoCapture(os.path.join(cwd,'town.avi'))
+def get_frames_and_background_substration(cwd):
+    vidcap = cv2.VideoCapture(os.path.join(cwd,'TownCentreXVID.avi'))
+    success=True
+    count = 0
+    # val = 10000
+    while success:
+        # vidcap.set(cv2.CAP_PROP_POS_MSEC, val)
+        success,image = vidcap.read()
+        print('Read a new frame: ', success)
+        if count==0:
+            current_bitmap=image
 
-while(cap.isOpened()):
-    ret, frame = cap.read()
+        else:
+            previous_bitmap=current_bitmap
+            # current_bitmap = cv2.imread(fr, 0)
+            current_bitmap=image
+            diff = cv2.absdiff( previous_bitmap, current_bitmap)
+            ret, diff = cv2.threshold(diff,30, 255, cv2.THRESH_BINARY)
+            # thresh = cv2.dilate(thresh, None, iterations=2)
+            # im2, cnts, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            # temp = 0
+            # min_area = (3000 / 800) * current_bitmap.shape[1]
+            # for c in cnts:
+            #     # if the contour is too small, ignore it
+            #     if cv2.contourArea(c) > min_area:
+            #         temp = 1
+            cv2.imshow("image", diff)
+            cv2.waitKey(1)
+        # val = val + 10000
+        count += 1
+    cv2.destroyAllWindows()
 
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-    cv2.imshow('frame',gray)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-cap.release()
-cv2.destroyAllWindows()
-
-
-# current_bitmap = cv2.imread("frame0.jpg", 0)
-# img_count=1
-# for i in range(1,2):
-#     previous_bitmap=current_bitmap
-#     fr="frame"+str(img_count)+".jpg"
-#     print(fr)
-#     current_bitmap = cv2.imread(fr,0)
-#     cv2.imshow("gray",current_bitmap)
-#     # diff=current_bitmap-previous_bitmap
-#     diff=cv2.absdiff(current_bitmap,previous_bitmap)
-#     for i in range(1080):
-#         for j in range(1920):
-#             if diff[i,j]<0:
-#                 diff[i,j]=0
-#             #else:
-#                 #diff[i,j]=255
-#
-#     # print(len(current_bitmap))
-#     # print(len(current_bitmap[0]))
-#     img_count+=1
-
-
-# print(bitmap)
-# cv2.imshow("frame",bitmap)
-# cv2.waitKey()
-# cv2.destroyAllWindows()
+if __name__=="__main__":
+    cwd = os.getcwd()
+    get_frames_and_background_substration(cwd)
