@@ -10,10 +10,6 @@ def rgb2gray(rgb):
     return gray.astype(np.uint8)
 
 
-# def absolute_differnce(image1,image2):
-
-
-
 def get_frames_and_background_substration(cwd):
     vidcap = cv2.VideoCapture(os.path.join(cwd,'TownCentreXVID.avi'))
     success=True
@@ -34,13 +30,15 @@ def get_frames_and_background_substration(cwd):
             # diff=np.absolute(np.array(previous_bitmap) - np.array(current_bitmap))
             diff=cv2.absdiff(previous_bitmap, current_bitmap)
             ret, diff = cv2.threshold(diff,30, 255, cv2.THRESH_BINARY)
-            #custom thresholding method
-            # for i in range(1080):
-            #       for j in range(1920):
-            #           if diff[i,j]<30:
-            #             diff[i,j]=0
-            #           else:
-            #             diff[i,j]=255
+
+
+            # custom thresholding method
+            for i in range(1,1080,32):
+                  for j in range(1,1920,32):
+                      if diff[i,j]<30:
+                        diff[i,j]=0
+                      else:
+                        diff[i,j]=255
 
 
             cv2.imshow("image", diff)
