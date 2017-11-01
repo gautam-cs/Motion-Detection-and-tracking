@@ -3,6 +3,13 @@ import datetime
 import imutils
 import time
 import cv2
+import numpy as np
+
+#custom rgb to grey scale conversion
+def rgb2gray(rgb):
+    r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
+    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+    return gray.astype(np.uint8)
  
 # parse the arguments
 ap = argparse.ArgumentParser()
@@ -25,8 +32,9 @@ while True:
         break
  
     # resize the frame, convert it to grayscale, and blur it
-    frame = imutils.resize(frame, width=900)
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    #frame = imutils.resize(frame, width=900)
+    # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray=rgb2gray(frame)
     gray = cv2.GaussianBlur(gray, (21, 21), 0)
     current_frame=gray
 
@@ -38,9 +46,17 @@ while True:
     # compute the absolute difference between the current frame and previous frame
     frameDelta = cv2.absdiff(previous_frame, current_frame)
     thresh = cv2.threshold(frameDelta, 5, 255, cv2.THRESH_BINARY)[1]
- 
+    
+    #custom thresholding method
+            # for i in range(1080):
+            #       for j in range(1920):
+            #           if frameDelta[i,j]<30:
+            #             frameDelta[i,j]=0
+            #           else:
+            #             frameDelta[i,j]=255
+            
     thresh = cv2.dilate(thresh, None, iterations=2)
-    im2, cnts, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    im2, cnts, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     
     for c in cnts:
         # if the contour is too small, ignore it
