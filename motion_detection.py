@@ -2,6 +2,7 @@ import argparse
 import cv2
 import numpy as np
 import math
+from imutils.object_detection import non_max_suppression
 
 drawing = False  # true if mouse is pressed
 mode = True  # if True, draw rectangle. Press 'm' to toggle to curve
@@ -15,6 +16,8 @@ point=[]
 point.append(x+w/2)
 point.append(y+h/2)
 thresh=200
+img=np.zeros(5)
+
 
 def draw_circle(event, x, y, flags, param):
     global ix, iy, drawing, mode
@@ -35,7 +38,7 @@ def draw_circle(event, x, y, flags, param):
         drawing = False
         if mode == True:
             list=[]
-            cv2.rectangle(img, (ix, iy), (x, y), (0, 25, 0), 2)
+            cv2.rectangle(img, (ix, iy), (x, y), (255,0, 0), 2)
             list.append(ix)
             list.append(iy)
             list.append(x)
@@ -44,7 +47,7 @@ def draw_circle(event, x, y, flags, param):
             print(list)
 
         else:
-            cv2.circle(img, (x, y), 5, (0, 0, 25), 2)
+            cv2.circle(img, (x, y), 5, (0, 0, 255), 2)
 
 def detect_people(frame):
     """
@@ -52,6 +55,8 @@ def detect_people(frame):
     Args: frame:
     Returns: processed frame
     """
+    hog = cv2.HOGDescriptor()
+    hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
     (rects, weights) = hog.detectMultiScale(frame, winStride=(8, 8), padding=(16, 16), scale=1.06)
     rects = non_max_suppression(rects, probs=None, overlapThresh=0.65)
     print(type(rects))
@@ -66,12 +71,14 @@ def rgb2gray(rgb):
     gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
     return gray.astype(np.uint8)
 
+
 def background_substraction(camera):
     # initialise previous frame
     previous_frame = None
+    (grabbed, frame) = camera.read()
+    create_rect(frame)
     while True:
         (grabbed, frame) = camera.read()
-
         if not grabbed:
             break
         # resize the frame, convert it to grayscale, and blur it
@@ -122,17 +129,8 @@ def background_substraction(camera):
     cv2.destroyAllWindows()
     return temp
 
-if __name__=="__main__":
-    # parse the arguments
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-v", "--video", help="path to the video file")
-    ap.add_argument("-a", "--min-area", type=int, default=500, help="minimum area size")
-    args = vars(ap.parse_args())
-    camera = cv2.VideoCapture(args["video"])
-    temp=background_substraction(camera)
-    img = cv2.imread("abc.jpg")
+def create_rect(img):
     cv2.namedWindow('image')
-
     cv2.setMouseCallback('image', draw_circle)
 
     while (1):
@@ -161,4 +159,18 @@ if __name__=="__main__":
         print(count)
     else:
         print(" no door is near to object")
+
+if __name__=="__main__":
+    # parse the arguments
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-v", "--video", help="path to the video file")
+    ap.add_argument("-a", "--min-area", type=int, default=500, help="minimum area size")
+    args = vars(ap.parse_args())
+    camera = cv2.VideoCapture(args["video"])
+    background_substraction(camera)
+    # img = cv2.imread("abc.jpg")
+    # cv2.namedWindow('image')
+    # detect_people(img)
+
+
     cv2.destroyAllWindows()
