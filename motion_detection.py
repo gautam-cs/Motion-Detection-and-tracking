@@ -46,6 +46,20 @@ def draw_circle(event, x, y, flags, param):
         else:
             cv2.circle(img, (x, y), 5, (0, 0, 25), 2)
 
+def detect_people(frame):
+    """
+    detect humans using HOG descriptor
+    Args: frame:
+    Returns: processed frame
+    """
+    (rects, weights) = hog.detectMultiScale(frame, winStride=(8, 8), padding=(16, 16), scale=1.06)
+    rects = non_max_suppression(rects, probs=None, overlapThresh=0.65)
+    print(type(rects))
+    for (x, y, w, h) in rects:
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+    return frame
+
+
 # custom rgb to grey scale conversion
 def rgb2gray(rgb):
     r, g, b = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
@@ -89,12 +103,11 @@ def background_substraction(camera):
 
         for c in cnts:
             # if the contour is too small, ignore it
-            if cv2.contourArea(c) < args["min_area"]:
-                continue
-
-            # compute the bounding box for the contour, draw it on the frame,
-            (x, y, w, h) = cv2.boundingRect(c)
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            if cv2.contourArea(c) > args["min_area"]:
+                temp=1
+                # compute the bounding box for the contour, draw it on the frame,
+                (x, y, w, h) = cv2.boundingRect(c)
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
         previous_frame = gray
         cv2.imshow("Security Feed", frame)
@@ -107,7 +120,7 @@ def background_substraction(camera):
 
     camera.release()
     cv2.destroyAllWindows()
-
+    return temp
 
 if __name__=="__main__":
     # parse the arguments
@@ -116,8 +129,7 @@ if __name__=="__main__":
     ap.add_argument("-a", "--min-area", type=int, default=500, help="minimum area size")
     args = vars(ap.parse_args())
     camera = cv2.VideoCapture(args["video"])
-    background_substraction(camera)
-
+    temp=background_substraction(camera)
     img = cv2.imread("abc.jpg")
     cv2.namedWindow('image')
 
